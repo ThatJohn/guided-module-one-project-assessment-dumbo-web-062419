@@ -8,3 +8,4 @@ gem "require_all"
 gem "rake"
 gem "tty-prompt"
 gem "tty-progressbar"
+gem 'asciimo'
