@@ -17,11 +17,30 @@ class Menu
   end
 
   def manage(selection)
-    whoToManage = selection.all.pluck(:name)
     options = ["Add #{selection}", "View #{selection}", "Edit #{selection}", "Delete #{selection}"]
 
     system("Clear")
-    @menu.select("What do you want to do?", options)
+    user_response = @menu.select("What do you want to do?", options)
+
+    view(selection) if user_response == "View #{selection}"
+    add(selection) if user_response == "Add #{selection}"
+
+  end
+
+  def view(selection)
+    options = selection.all.pluck(:name)
+
+    system("clear")
+    @menu.select("Here are your #{selection}, Press enter to go back to the main menu", options, per_page: 15)
+    main_menu
+  end
+
+  def add(selection)
+    system("clear")
+
+    insertNew = @menu.ask("Please enter new #{selection}")
+    selection.create(name: insertNew)
+
   end
 
 end
