@@ -54,15 +54,46 @@ class Menu
     who = "job order" if model == JobOrder
     who = "client" if model == Client
 
-    insertNew = @menu.ask("Please enter a name for the new #{who}")
-    model.create(name: insertNew)
+    if model == JobOrder
+      theClient = 0
+      theTech = 0
 
-    @menu.ok("#{insertNew} inserted successfully")
+      newJob = @menu.ask("Please enter the description of the new #{who}")
+      @menu.select("Please assign a technician", per_page: 15) do |menu|
+        techList = Technician.all
+        techList.each do |tech|
+          menu.choice tech.name, -> {theTech = tech.id}
+        end
+      end
+
+      @menu.select("Please select the client of this job")do |menu|
+        clientList = Client.all
+        clientList.each do |client|
+          menu.choice client.name, -> {theClient = client.id}
+        end
+      end
+
+      JobOrder.create(name: newJob, technician_id: theTech, client_id: theClient, status: "In progress")
+
+    else
+      insertNew = @menu.ask("Please enter a name for the new #{who}")
+      model.create(name: insertNew)
+      @menu.ok("#{insertNew} inserted successfully")
+      sleep(2)
+      main_menu
+    end
+  end
+
+  def delete(model, id)
+    whoToDelete = model.find_by(id: id)
+    whoToDelete.destroy
+
+    @menu.ok("#{whoToDelete.name} deleted successfully")
     sleep(2)
     main_menu
   end
 
-  def delete(model, id)
+  def edit(model, id)
 
   end
 
