@@ -86,7 +86,7 @@ class Menu
       main_menu
 
     else
-      insertNew = @menu.ask("Please enter a name for the new #{who}")
+      insertNew = @menu.ask("Please enter a name for the new #{current_model}")
       model.create(name: insertNew)
       @menu.ok("#{insertNew} inserted successfully")
       sleep(2)
