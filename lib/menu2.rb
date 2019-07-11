@@ -18,6 +18,7 @@ class Menu
       menu.choice "Manage technicians", -> { view(Technician) }
       menu.choice "Manage orders", -> { view(JobOrder) }
       menu.choice "Manage clients", -> { view(Client) }
+      menu.choice "Advanced reports", -> {report_menu}
       menu.choice "Exit"
     end
   end
@@ -26,10 +27,17 @@ class Menu
 
     title
 
+    if model == JobOrder
+      openJobs = JobOrder.where(status: "In progress").count
+      finishedJobs = JobOrder.where(status: "Completed").count
+      puts "There are currently #{openJobs} unfinished jobs and #{finishedJobs} finished jobs."
+      puts
+    end
+
     current_model = "technician" if model == Technician
     current_model = "job order" if model == JobOrder
     current_model = "client" if model == Client
-    whatModel = model.all
+    whatModel = model.all.order('id DESC')
 
     @menu.select("Here's a list of your #{current_model}s", per_page: 15) do |menu|
       menu.choice "Add a new one", -> {add(model)}
@@ -46,7 +54,6 @@ class Menu
 
   def whatToDo(model, id)
     title
-    # system("cls") || system("clear")
 
     @menu.select("What would you like to do with it?") do |menu|
       menu.choice "Edit", -> {edit(model, id)}
@@ -95,16 +102,22 @@ class Menu
   end
 
   def delete(model, id)
+    title
+
     whoToDelete = model.find_by(id: id)
 
-    @menu.no?("Are you sure?")
-    whoToDelete.destroy
+    @menu.select("Are you sure?") do |menu|
+      menu.choice "No", -> {view(model)}
+      menu.choice "Yes", -> {whoToDelete.destroy}
+    end
+
     @menu.ok("#{whoToDelete.name} deleted successfully")
     sleep(2)
     main_menu
   end
 
   def edit(model, id)
+    title
 
     if model == JobOrder
       whoToEdit = model.find_by(id: id)
@@ -133,7 +146,7 @@ class Menu
       end
 
 
-      whoToEdit.update(name: newDescription, technician_id: theTech, client_id: theClient, status: "In progress")
+      whoToEdit.update(name: newDescription, technician_id: theTech, client_id: theClient, status: theStatus)
       @menu.ok("Job updated successfully")
       sleep(2)
       main_menu
@@ -149,9 +162,63 @@ class Menu
       main_menu
     end
 
+  end
+  def report_menu
+
+    title
+
+    @menu.select("Select the report you want to see") do |menu|
+
+      menu.choice "Check amount of jobs per technician", -> {report("jobs_by_tech")}
+      menu.choice "Check amount of jobs per client", -> {report("jobs_by_client")}
+      menu.choice "View employee of the month", -> {report("employee_of_the_month")}
+      menu.choice "Go back to the main menu", -> {main_menu}
+    end
+
+    # binding.pry
 
   end
 
+  def report(option)
+    if option == "jobs_by_tech"
+      techs = Technician.all
+      puts ""
+      techs.each do |tech|
+        puts "#{tech.name} has been assigned #{tech.job_orders.count} jobs"
+      end
+      puts ""
+      @menu.keypress("Press space or enter to continue", keys: [:space, :return])
+      report_menu
+    end
+
+
+    if option == "jobs_by_client"
+      clients = Client.all
+      puts ""
+      clients.each do |client|
+        puts "#{client.name} has requested #{client.job_orders.count} jobs"
+      end
+      puts ""
+      @menu.keypress("Press space or enter to continue", keys: [:space, :return])
+      report_menu
+    end
+
+#    order('id DESC')    .order('COUNT(job_orders) DESC')       .order('COUNT(offers.id) DESC')
+
+    if option == "employee_of_the_month"
+      techs = Technician.all
+      puts ""
+      techs.each do |tech|
+        puts "#{tech.name} has been assigned #{tech.job_orders.count} jobs"
+      end
+      puts ""
+      @menu.keypress("Press space or enter to continue", keys: [:space, :return])
+      report_menu
+    end
+
+
+
+  end
 
 
 end
